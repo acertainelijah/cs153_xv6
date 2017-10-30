@@ -17,7 +17,7 @@ int main(int argc, char ** argv){
 	int a=0;
 	//int	pid3=0;
 	
-	int status;
+	//int status;
 	a = getpid();
 	pid1=fork();
 	if(	pid1	!=		0)	{
@@ -26,7 +26,7 @@ int main(int argc, char ** argv){
 		pid2 =fork();
 		x = getpid();
 		y = getpriority();
-		printf(1,"wait [%d] and pri [%d]\n",	x, y);
+		printf(1,"wait [%d] and priority [%d]\n",	x, y);
 		if (pid2 != 0)
 		{
 			a = changepriority(10);
@@ -35,10 +35,10 @@ int main(int argc, char ** argv){
 		
 		// y = getpri();
 		// printf(1,"process [%d] new pri [%d]\n",	x, y);
-		
-		waitpid(pid1, &status, 0);
+	        printf(1,"calling waitpid on [%d]:", pid1);	
+		//waitpid(pid1, &status, 0);
 		y = getpriority();
-		printf(1,"finnally [%d] and pri [%d]\n",	x, y);
+		printf(1,"finally [%d] and priority  [%d]\n",	x, y);
 		
 		
 	}
