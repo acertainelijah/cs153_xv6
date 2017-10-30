@@ -16,30 +16,14 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  int status;
-  argint(0, &status);
-  exit(status);
+  exit();
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  int* status;
-  argptr(0, (char **) &status, sizeof(int*));
-  return wait(status);
-}
-
-int
-sys_waitpid(){
-  int* status;
-  int pid, options;
-  
-  argint(0,&pid);
-  argptr(0, (char **) &status, sizeof(int*));
-  argint(0, &options);
-  return waitpid(pid,status,options);
-  return 0;
+  return wait();
 }
 
 int
