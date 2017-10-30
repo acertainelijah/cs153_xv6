@@ -16,7 +16,7 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit(0);
+  int status;
   argint(0, &status);
   exit(status);
   return 0;  // not reached
@@ -60,7 +60,7 @@ sys_getpid(void)
 
 int
 sys_sbrk(void)
-{i
+{
   int addr;
   int n;
 
