@@ -397,8 +397,12 @@ scheduler(void)
   struct proc *p;
   struct cpu *c = mycpu();
   c->proc = 0;
+  int priority = 0;
   
   for(;;){
+    //Set max priority to zero
+    priority = 0;
+
     // Enable interrupts on this processor.
     sti();
 
@@ -407,6 +411,13 @@ scheduler(void)
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+	//If max priority is lower, then replace it
+       	if(priority < p->priority){
+		priority = p->priority;
+		break;
+     	}
+	if(p->priority < priority)
+		continue;
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -425,6 +436,20 @@ scheduler(void)
     release(&ptable.lock);
 
   }
+}
+
+//Change priority sys call
+int changepriority(int priority){
+  struct proc *curproc = myproc();
+  acquire(&ptable.lock); 
+  if(priority > 63 || priority < 0){
+    return -1; 
+  }
+  curproc->startpriority = priority; 
+  curproc->priority = priority;
+  curproc->state = RUNNABLE;
+  release(&ptable.lock);  
+  return priority;
 }
 
 // Enter scheduler.  Must hold only ptable.lock
