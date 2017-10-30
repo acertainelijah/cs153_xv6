@@ -30,7 +30,7 @@ int main(int argc, char ** argv){
 		if (pid2 != 0)
 		{
 			a = changepriority(10);
-			printf(1,"value of a = [%d]", a);
+			printf(1,"value of a = [%d]\n", a);
 		}
 		
 		// y = getpri();

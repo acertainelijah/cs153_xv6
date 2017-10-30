@@ -16,14 +16,18 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit(0);
+  int status;
+  argint(0, &status);
+  exit(status);
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  return wait(0);
+  int* status;
+  argptr(0, (char **) &status, sizeof(int*));
+  return wait(status);
 }
 
 //New sys call for priority
