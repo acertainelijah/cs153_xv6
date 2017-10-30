@@ -36,6 +36,12 @@ sys_changepriority(void){
 }
 
 int
+sys_getpriority(void)
+{
+  return myproc()->priority;
+}
+
+int
 sys_kill(void)
 {
   int pid;
