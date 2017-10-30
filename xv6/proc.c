@@ -252,18 +252,6 @@ exit(int status)
   // Parent might be sleeping in wait(0).
   wakeup1(curproc->parent);
 
-  // Wakes up waiting processes
-  int x;  
-  if(curproc->p_array_sz != 0){
-  	for(x = 0; x < curproc->p_array_sz; x++){
-		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-			if(p->pid == curproc->p_array[x]){
-				wakeup1(p);
-      			}
-    		}
-  	}
-  }
-
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
@@ -307,9 +295,6 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-	if(status){
-		*status = p->status;
-	}
         release(&ptable.lock);
         return pid;
       }
@@ -345,8 +330,9 @@ waitpid(int pid, int *status, int options)
       if(p->pid != pid) //if the processes PID in ptable != pid argument
         continue;
       processFound = 1;
+      
       if(p->p_array_sz < sizeof(p->p_array)){ //if there is space in the proccess's wait array, 
-	p->p_array[p->p_array_sz] = curproc->pid;  //add the proc to the pid process's wait array
+	p->p_array[p->p_array_sz] = p->pid;  //add the proc to the pid process's wait array
 	p->p_array_sz++;		
       }
 	
@@ -372,9 +358,6 @@ waitpid(int pid, int *status, int options)
     // No point waiting if we don't have any children.
     if(!processFound || curproc->killed){
       release(&ptable.lock);
-      if(status){
-	*status = -1;
-      }
       return -1;
     }
 
