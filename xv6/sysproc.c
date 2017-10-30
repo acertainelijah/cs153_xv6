@@ -16,14 +16,14 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  exit();
+  exit(0);
   return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  return wait();
+  return wait(0);
 }
 
 //New sys call for priority
@@ -103,4 +103,16 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_waitpid(){
+  int pid, options;
+  int *status;
+
+  argint(0, &pid);
+  argptr(0, (char**) &status, sizeof(int*));
+  argint(0, &options);
+  return waitpid(pid, status, options);
+  return 0;
 }
