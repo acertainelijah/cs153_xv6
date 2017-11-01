@@ -230,7 +230,7 @@ exit(int status)
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-
+  curproc->status = status;
   if(curproc == initproc)
     panic("init exiting");
 
@@ -415,11 +415,20 @@ scheduler(void)
 	//If max priority is lower, then replace it
        	if(priority < p->priority){
 		priority = p->priority;
-		break;
      	}
-	if(p->priority < priority)
-		continue;
-
+	}
+	
+	for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+		if(p->state != RUNNABLE){
+			continue;
+		}
+		if(priority < p->priority){
+			priority = p->priority;
+			break;
+		}
+		if(priority > p->priority){
+			continue;
+		}
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
@@ -441,8 +450,8 @@ scheduler(void)
 
 //Change priority sys call
 int changepriority(int priority){
-  struct proc *curproc = myproc();
-  acquire(&ptable.lock); 
+  acquire(&ptable.lock);
+  struct proc *curproc = myproc(); 
   if(priority > 63 || priority < 0){
     return -1; 
   }
