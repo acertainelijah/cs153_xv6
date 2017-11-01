@@ -397,7 +397,58 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
-  c->proc = 0;
+
+  for(;;){
+    // Enable interrupts on this processor.
+    sti();
+
+    // Loop over process table looking for process to run.
+    acquire(&ptable.lock);
+    int min = 64;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+		if (p->state != RUNNABLE) {
+			continue;
+		}
+		else if (p->priority < min) {
+			min = p->priority;
+		}
+	}
+
+    //cprintf("min value: %d", min);
+    
+    
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      if(p->state != RUNNABLE)
+        continue;
+
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      if (p->priority == min) {
+		  //cprintf("min value: %d", min);
+		  c->proc = p;
+		  switchuvm(p);
+		  p->state = RUNNING;
+		  swtch(&c->scheduler, p->context);
+		  switchkvm();
+
+		  // Process is done running for now.
+		  // It should have changed its p->state before coming back.
+		  c->proc = 0;
+	  }
+    }
+    release(&ptable.lock);
+
+  }
+}
+
+/*
+void
+scheduler(void)
+{
+  struct proc *p;
+  struct cpu *c = mycpu();
+  //c->proc = 0;
   int priority = 0;
   
   for(;;){
@@ -406,8 +457,7 @@ scheduler(void)
 
     // Enable interrupts on this processor.
     sti();
-
-    // Loop over process table looking for process to run.
+   // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
@@ -436,7 +486,8 @@ scheduler(void)
       switchuvm(p);
       p->state = RUNNING;
 
-      swtch(&(c->scheduler), p->context);
+      //swtch(&(c->scheduler), p->context);
+      swtch(&c->scheduler, p->context);
       switchkvm();
 
       // Process is done running for now.
@@ -444,14 +495,16 @@ scheduler(void)
       c->proc = 0;
     }
     release(&ptable.lock);
-
+    
+    
   }
 }
+*/
 
 //Change priority sys call
 int changepriority(int priority){
-  acquire(&ptable.lock);
   struct proc *curproc = myproc(); 
+  acquire(&ptable.lock);
   if(priority > 63 || priority < 0){
     return -1; 
   }
@@ -459,6 +512,8 @@ int changepriority(int priority){
   curproc->priority = priority;
   curproc->state = RUNNABLE;
   release(&ptable.lock);  
+  //cs153 give up control
+  yield(); 
   return priority;
 }
 

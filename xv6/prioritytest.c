@@ -111,39 +111,39 @@ int waitPid(void){
     printf(1, "\n  Step 2: Assuming that the priorities range between range between 0 to 63\n");
     printf(1, "\n  Step 2: 0 is the highest priority. All processes have a default priority of 20\n");
     printf(1, "\n  Step 2: The parent processes will switch to priority 0\n");
-    printf(1, "AAA");
-	 //changepriority(0);
-   printf(1, "BBB");
+    //printf(1, "AAA");
+	 changepriority(0);
+   //printf(1, "BBB");
     for (i = 0; i <  3; i++) {
-	printf(1, "CCC");
+	//printf(1, "CCC");
 	pid = fork();
-	printf(1, "DDD");
+	//printf(1, "DDD");
 	if (pid > 0 ) {
-		printf(1, "EEE");
+		//printf(1, "EEE");
 		continue;}
 	else if ( pid == 0) {
-		printf(1, "FFF");
+		//printf(1, "FFF");
 		printf(1, "\n Hello! this is child# %d and I will change my priority to %d \n",getpid(),60-20*i);
 		changepriority(60-20*i);	
 		for (j=0;j<50000;j++) {
-			printf(1, "GGG");
+			//printf(1, "GGG");
 			for(k=0;k<10000;k++) {
-				printf(1, "HHH");
+				//printf(1, "HHH");
 				asm("nop"); }}
 		printf(1, "\n child# %d with priority %d has finished! \n",getpid(),60-20*i);		
 		exit(0);
         }
         else {
-			printf(1, "III");
+			//printf(1, "III");
 			printf(2," \n Error \n");
 			exit(-1);
         }
 	}
 
 	if(pid > 0) {
-		printf(1, "JJJ");
+		//printf(1, "JJJ");
 		for (i = 0; i <  3; i++) {
-			printf(1, "KKK");
+			//printf(1, "KKK");
 			ret_pid = wait(&exit_status);
 			printf(1,"\n This is the parent: child with PID# %d has finished with status %d \n",ret_pid,exit_status);
 			}
