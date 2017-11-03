@@ -519,6 +519,24 @@ int changepriority(int priority){
   return priority;
 }
 
+//cs153 bonus function for priority inheritance
+void newpriority(struct proc *proc){
+	struct proc *curproc = myproc();
+	acquire(&ptable.lock);
+	if(proc->priority < curproc->priority){
+		curproc->priority = proc->priority;
+	}
+	release(&ptable.lock);
+}
+
+//cs153 bonus function for priority inheritance
+void restorepriority(){
+	struct proc *curproc = myproc();
+	acquire(&ptable.lock);
+	curproc->priority = curproc->startpriority;
+	release(&ptable.lock);
+}
+
 // Enter scheduler.  Must hold only ptable.lock
 // and have changed proc->state. Saves and restores
 // intena because intena is a property of this
