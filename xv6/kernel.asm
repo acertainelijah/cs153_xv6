@@ -9832,6 +9832,7 @@ found:
   p->state = EMBRYO;
   p->pid = nextpid++;
 801035e9:	a1 04 a0 10 80       	mov    0x8010a004,%eax
+  //cs153 set default priority to 20
   p->priority = 20;
   p->startpriority = 20;
 
@@ -9845,16 +9846,17 @@ found:
   p->state = EMBRYO;
 801035f1:	c7 43 0c 01 00 00 00 	movl   $0x1,0xc(%ebx)
   p->pid = nextpid++;
+  //cs153 set default priority to 20
   p->priority = 20;
   p->startpriority = 20;
 
   release(&ptable.lock);
 801035f8:	68 20 2d 11 80       	push   $0x80112d20
-  return 0;
 
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  //cs153 set default priority to 20
   p->priority = 20;
 801035fd:	c7 83 4c 01 00 00 14 	movl   $0x14,0x14c(%ebx)
 80103604:	00 00 00 
@@ -9870,6 +9872,7 @@ found:
 80103611:	8d 50 01             	lea    0x1(%eax),%edx
 80103614:	89 43 10             	mov    %eax,0x10(%ebx)
 80103617:	89 15 04 a0 10 80    	mov    %edx,0x8010a004
+  //cs153 set default priority to 20
   p->priority = 20;
   p->startpriority = 20;
 
@@ -10685,6 +10688,7 @@ sti(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
 80103a81:	83 ec 0c             	sub    $0xc,%esp
+    //cs153 find process with highest priority
     int min = 64;
 80103a84:	bf 40 00 00 00       	mov    $0x40,%edi
   for(;;){
@@ -10696,6 +10700,7 @@ sti(void)
 80103a89:	68 20 2d 11 80       	push   $0x80112d20
 80103a8e:	e8 9d 0b 00 00       	call   80104630 <acquire>
 80103a93:	83 c4 10             	add    $0x10,%esp
+    //cs153 find process with highest priority
     int min = 64;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 80103a96:	b8 54 2d 11 80       	mov    $0x80112d54,%eax
@@ -10713,10 +10718,10 @@ sti(void)
 80103ab2:	8b 88 4c 01 00 00    	mov    0x14c(%eax),%ecx
 80103ab8:	39 cf                	cmp    %ecx,%edi
 80103aba:	0f 4f f9             	cmovg  %ecx,%edi
-    sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+    //cs153 find process with highest priority
     int min = 64;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 80103abd:	05 54 01 00 00       	add    $0x154,%eax
@@ -11379,9 +11384,9 @@ yield(void)
 80103eb9:	8d bc 27 00 00 00 00 	lea    0x0(%edi,%eiz,1),%edi
 
 80103ec0 <changepriority>:
+
   }
 }
-*/
 
 //Change priority sys call
 int changepriority(int priority){
@@ -11403,7 +11408,7 @@ myproc(void) {
 80103ed2:	8b b0 ac 00 00 00    	mov    0xac(%eax),%esi
   popcli();
 80103ed8:	e8 03 08 00 00       	call   801046e0 <popcli>
-*/
+}
 
 //Change priority sys call
 int changepriority(int priority){
@@ -11833,7 +11838,7 @@ myproc(void) {
 80104110 <waitpid>:
 }
 
-
+//cs153 Added waitpid
 int
 waitpid(int pid, int *status, int options)
 {
