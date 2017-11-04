@@ -16,33 +16,29 @@ sys_fork(void)
 int
 sys_exit(void)
 {
+  //cs153 get status from user space and return status
   int status;
   argint(0, &status);
   exit(status);
-  return 0;  // not reached
+  return 0;  
 }
 
 int
 sys_wait(void)
 {
+  //cs153 get status to implement wait
   int* status;
   argptr(0, (char **) &status, sizeof(int*));
   return wait(status);
 }
 
-//New sys call for priority
+//cs153 new sys call for setting priority
 int                            
 sys_changepriority(void){      
   int priority;
   argint(0, &priority);
   changepriority(priority);
   return priority;
-}
-
-int
-sys_getpriority(void)
-{
-  return myproc()->priority;
 }
 
 int
@@ -109,6 +105,7 @@ sys_uptime(void)
   return xticks;
 }
 
+//cs153 implement waitpid sys call
 int
 sys_waitpid(){
   int pid, options;

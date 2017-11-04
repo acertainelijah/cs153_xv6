@@ -9333,12 +9333,10 @@ SYSCALL(changepriority)
     3f0a:	b8 17 00 00 00       	mov    $0x17,%eax
     3f0f:	cd 40                	int    $0x40
     3f11:	c3                   	ret    
-
-00003f12 <getpriority>:
-SYSCALL(getpriority)
-    3f12:	b8 18 00 00 00       	mov    $0x18,%eax
-    3f17:	cd 40                	int    $0x40
-    3f19:	c3                   	ret    
+    3f12:	66 90                	xchg   %ax,%ax
+    3f14:	66 90                	xchg   %ax,%ax
+    3f16:	66 90                	xchg   %ax,%ax
+    3f18:	66 90                	xchg   %ax,%ax
     3f1a:	66 90                	xchg   %ax,%ax
     3f1c:	66 90                	xchg   %ax,%ax
     3f1e:	66 90                	xchg   %ax,%ax

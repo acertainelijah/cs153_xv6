@@ -20,6 +20,5 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
-#define SYS_waitpid 22
-#define SYS_changepriority 23
-#define SYS_getpriority 24
+#define SYS_waitpid 22 //cs153 add sys call waitpid to vector
+#define SYS_changepriority 23 //cs153 add sys call changepriority to vector
