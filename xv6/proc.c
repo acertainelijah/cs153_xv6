@@ -410,16 +410,15 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     //cs153 find process with highest priority
-    int min = 64;//cs153 store min priority - 1
+    int highestPriority = 64;//cs153 store (lowest priority + 1) 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-		if (p->state != RUNNABLE) {
+		if (p->state != RUNNABLE) 
 			continue;
-		}
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
-			min = p->priority;
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
+			highestPriority = p->priority;
 		}
 	}
-    //cs153 @@
+    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
@@ -427,8 +426,7 @@ scheduler(void)
      // Switch to chosen process.  It is the process's job
      // to release ptable.lock and then reacquire it
      // before jumping back to us.
-     //cs153 switch if current process has the highest priority
-     if (p->priority == min) {
+     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
 		  c->proc = p;
 		  switchuvm(p);//cs153 switch to higher priority process
 		  p->state = RUNNING;
