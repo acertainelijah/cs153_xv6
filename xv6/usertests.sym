@@ -12,11 +12,11 @@
 00000000 .debug_loc
 00000000 .debug_ranges
 00000000 usertests.c
-000063a0 args.1479
+000063a0 args.1477
 00000000 ulib.c
 00000000 printf.c
 00003f20 printint
-00005a80 digits.1115
+00005a80 digits.1113
 00000000 umalloc.c
 00006420 freep
 00006424 base
@@ -29,7 +29,6 @@
 00003e30 memmove
 00000360 openiputtest
 00003eaa mknod
-00003f12 getpriority
 00003d30 gets
 00003ee2 getpid
 00000b40 pipe1

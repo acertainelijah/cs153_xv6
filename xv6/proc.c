@@ -228,11 +228,12 @@ fork(void)
 // An exited process remains in the zombie state
 // until its parent calls wait(0) to find out it exited.
 void
-exit(int status)
+exit(int status)//cs153 add int status parameter
 {
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
+  //cs153 set status for current process
   curproc->status = status;
   if(curproc == initproc)
     panic("init exiting");
@@ -255,7 +256,7 @@ exit(int status)
   // Parent might be sleeping in wait(0).
   wakeup1(curproc->parent);
 
-  // Wakes up waiting processes
+  //cs153 wakes up waiting processes
   int x;  
   if(curproc->p_array_sz != 0){
   	for(x = 0; x < curproc->p_array_sz; x++){
@@ -277,7 +278,7 @@ exit(int status)
   }
 
   // Jump into the scheduler, never to return.
-  curproc->priority = 0;
+  curproc->priority = 0;//cs153 set priority
   curproc->state = ZOMBIE;
   sched();
   panic("zombie exit");
@@ -286,7 +287,7 @@ exit(int status)
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(int *status)
+wait(int *status)//cs153 add int *status parameter
 {
   struct proc *p;
   int havekids, pid;
@@ -311,6 +312,7 @@ wait(int *status)
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
+	//cs153 check status not zero then assign status
 	if(status){
 		*status = p->status;
 	}
@@ -322,7 +324,7 @@ wait(int *status)
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
-      if(status){
+      if(status){//cs153 check status not zero set to -1
 	*status = -1;
       }
       return -1;
@@ -346,15 +348,15 @@ waitpid(int pid, int *status, int options)
     processFound = 0;
     // Scan through table looking for exited children.
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->pid != pid) //if the processes PID in ptable != pid argument
+      if(p->pid != pid) //cs153 if the processes PID in ptable != pid argument
         continue;
       processFound = 1;
-      if(p->p_array_sz < sizeof(p->p_array)){ //if there is space in the proccess's wait array, 
-	p->p_array[p->p_array_sz] = curproc->pid;  //add the proc to the pid process's wait array
+      if(p->p_array_sz < sizeof(p->p_array)){ //cs153 if there is space in the proccess's wait array, 
+	p->p_array[p->p_array_sz] = curproc->pid;  //cs153 add the proc to the pid process's wait array
 	p->p_array_sz++;		
       }
 	
-      if(p->state == ZOMBIE){ //if processes p's PID in ptable == pid argument
+      if(p->state == ZOMBIE){ //cs153 if processes p's PID in ptable == pid argument
         // Found one.
         pidTarget = p->pid;
         kfree(p->kstack);
@@ -408,30 +410,27 @@ scheduler(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     //cs153 find process with highest priority
-    int min = 64;
+    int min = 64;//cs153 store min priority - 1
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 		if (p->state != RUNNABLE) {
 			continue;
 		}
-		else if (p->priority < min) {
+		else if (p->priority < min) {//cs153 check if finds a process with higher priority
 			min = p->priority;
 		}
 	}
-
-    //cprintf("min value: %d", min);
-    
-    
+    //cs153 @@
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      if (p->priority == min) {
-		  //cprintf("min value: %d", min);
+     // Switch to chosen process.  It is the process's job
+     // to release ptable.lock and then reacquire it
+     // before jumping back to us.
+     //cs153 switch if current process has the highest priority
+     if (p->priority == min) {
 		  c->proc = p;
-		  switchuvm(p);
+		  switchuvm(p);//cs153 switch to higher priority process
 		  p->state = RUNNING;
 		  swtch(&c->scheduler, p->context);
 		  switchkvm();
@@ -439,14 +438,14 @@ scheduler(void)
 		  // Process is done running for now.
 		  // It should have changed its p->state before coming back.
 		  c->proc = 0;
-	  }
+	}
     }
     release(&ptable.lock);
 
   }
 }
 
-//Change priority sys call
+//cs153 add the change priority sys call
 int changepriority(int priority){
   struct proc *curproc = myproc(); 
   acquire(&ptable.lock);
