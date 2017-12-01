@@ -104,7 +104,7 @@ int             pipewrite(struct pipe*, char*, int);
 //PAGEBREAK: 16
 // proc.c
 int             cpuid(void);
-void            exit(int); //cs153 add int arg
+void            exit(void);
 int             fork(void);
 int             growproc(int);
 int             kill(int);
@@ -117,11 +117,9 @@ void            sched(void);
 void            setproc(struct proc*);
 void            sleep(void*, struct spinlock*);
 void            userinit(void);
-int             wait(int *status); //cs153 add int arg
+int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int		waitpid(int pid, int *status, int options); //cs153 define waitpid
-int 		changepriority(int priority); //cs153 define changepriority
 
 // swtch.S
 void            swtch(struct context**, struct context*);
@@ -187,6 +185,15 @@ void            switchuvm(struct proc*);
 void            switchkvm(void);
 int             copyout(pde_t*, uint, void*, uint);
 void            clearpteu(pde_t *pgdir, char *uva);
+
+//made mappages visible (and removed static) to facilitate implementing shm
+int
+mappages(pde_t *pgdir, void *va, uint size, uint pa, int perm);
+
+//shm.c
+void shminit(void);
+int shm_open(int id, char **pointer);
+int shm_close(int id);
 
 // number of elements in fixed-size array
 #define NELEM(x) (sizeof(x)/sizeof((x)[0]))

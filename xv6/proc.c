@@ -88,9 +88,6 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
-  //cs153 set default priority to 20
-  p->priority = 20;
-  p->startpriority = 20;
 
   release(&ptable.lock);
 
@@ -226,15 +223,14 @@ fork(void)
 
 // Exit the current process.  Does not return.
 // An exited process remains in the zombie state
-// until its parent calls wait(0) to find out it exited.
+// until its parent calls wait() to find out it exited.
 void
-exit(int status)//cs153 add int status parameter
+exit(void)
 {
   struct proc *curproc = myproc();
   struct proc *p;
   int fd;
-  //cs153 set status for current process
-  curproc->status = status;
+
   if(curproc == initproc)
     panic("init exiting");
 
@@ -253,20 +249,8 @@ exit(int status)//cs153 add int status parameter
 
   acquire(&ptable.lock);
 
-  // Parent might be sleeping in wait(0).
+  // Parent might be sleeping in wait().
   wakeup1(curproc->parent);
-
-  //cs153 wakes up waiting processes
-  int x;  
-  if(curproc->p_array_sz != 0){
-    for(x = 0; x < curproc->p_array_sz; x++){
-      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-	if(p->pid == curproc->p_array[x]){
-          wakeup1(p);
-      	}
-       }
-     }
-  }
 
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
@@ -278,7 +262,6 @@ exit(int status)//cs153 add int status parameter
   }
 
   // Jump into the scheduler, never to return.
-  curproc->priority = 0;//cs153 set priority
   curproc->state = ZOMBIE;
   sched();
   panic("zombie exit");
@@ -287,7 +270,7 @@ exit(int status)//cs153 add int status parameter
 // Wait for a child process to exit and return its pid.
 // Return -1 if this process has no children.
 int
-wait(int *status)//cs153 add int *status parameter
+wait(void)
 {
   struct proc *p;
   int havekids, pid;
@@ -312,10 +295,6 @@ wait(int *status)//cs153 add int *status parameter
         p->name[0] = 0;
         p->killed = 0;
         p->state = UNUSED;
-	//cs153 check status not zero then assign status
-	if(status){
-		*status = p->status;
-	}
         release(&ptable.lock);
         return pid;
       }
@@ -324,63 +303,6 @@ wait(int *status)//cs153 add int *status parameter
     // No point waiting if we don't have any children.
     if(!havekids || curproc->killed){
       release(&ptable.lock);
-      if(status){//cs153 check status not zero set to -1
-	*status = -1;
-      }
-      return -1;
-    }
-
-    // Wait for children to exit.  (See wakeup1 call in proc_exit.)
-    sleep(curproc, &ptable.lock);  //DOC: wait-sleep
-  }
-}
-
-//cs153 Added waitpid
-int
-waitpid(int pid, int *status, int options)
-{
-  struct proc *p;
-  int processFound, pidTarget;
-  struct proc *curproc = myproc();
-  
-  acquire(&ptable.lock);
-  for(;;){
-    processFound = 0;
-    // Scan through table looking for exited children.
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-      if(p->pid != pid) //cs153 if the processes PID in ptable != pid argument
-        continue;
-      processFound = 1;
-      if(p->p_array_sz < sizeof(p->p_array)){ //cs153 if there is space in the proccess's wait array, 
-	p->p_array[p->p_array_sz] = curproc->pid;  //cs153 add the proc to the pid process's wait array
-	p->p_array_sz++;		
-      }
-	
-      if(p->state == ZOMBIE){ //cs153 if processes p's PID in ptable == pid argument
-        // Found one.
-        pidTarget = p->pid;
-        kfree(p->kstack);
-        p->kstack = 0;
-        freevm(p->pgdir);
-        p->pid = 0;
-	p->parent = 0;
-        p->name[0] = 0;
-        p->killed = 0;
-        p->state = UNUSED;
-        if(status) {
-	  *status = p->status;
-	}
-	release(&ptable.lock);
-        return pidTarget;
-      }
-    }
-
-    // No point waiting if we don't have any children.
-    if(!processFound || curproc->killed){
-      release(&ptable.lock);
-      if(status){
-	*status = -1;
-      }
       return -1;
     }
 
@@ -402,79 +324,35 @@ scheduler(void)
 {
   struct proc *p;
   struct cpu *c = mycpu();
-
+  c->proc = 0;
+  
   for(;;){
     // Enable interrupts on this processor.
     sti();
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
-    //cs153 find process with highest priority
-    int highestPriority = 64;//cs153 store (lowest priority + 1) 
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-		if (p->state != RUNNABLE) 
-			continue;
-		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
-			highestPriority = p->priority;
-		}
-	}
-    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
 
-     // Switch to chosen process.  It is the process's job
-     // to release ptable.lock and then reacquire it
-     // before jumping back to us.
-     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
-		  c->proc = p;
-		  switchuvm(p);//cs153 switch to higher priority process
-		  p->state = RUNNING;
-		  swtch(&c->scheduler, p->context);
-		  switchkvm();
+      // Switch to chosen process.  It is the process's job
+      // to release ptable.lock and then reacquire it
+      // before jumping back to us.
+      c->proc = p;
+      switchuvm(p);
+      p->state = RUNNING;
 
-		  // Process is done running for now.
-		  // It should have changed its p->state before coming back.
-		  c->proc = 0;
-	}
+      swtch(&(c->scheduler), p->context);
+      switchkvm();
+
+      // Process is done running for now.
+      // It should have changed its p->state before coming back.
+      c->proc = 0;
     }
     release(&ptable.lock);
 
   }
-}
-
-//cs153 add the change priority sys call
-int changepriority(int priority){
-  struct proc *curproc = myproc(); 
-  acquire(&ptable.lock);
-  if(priority > 63 || priority < 0){
-    return -1; 
-  }
-  curproc->startpriority = priority; 
-  curproc->priority = priority;
-  curproc->state = RUNNABLE;
-  release(&ptable.lock);  
-  //cs153 give up control
-  yield(); 
-  return priority;
-}
-
-//cs153 bonus function for priority inheritance
-void newpriority(struct proc *proc){
-	struct proc *curproc = myproc();
-	acquire(&ptable.lock);
-	if(proc->priority < curproc->priority){
-		curproc->priority = proc->priority;
-	}
-	release(&ptable.lock);
-}
-
-//cs153 bonus function for priority inheritance
-void restorepriority(){
-	struct proc *curproc = myproc();
-	acquire(&ptable.lock);
-	curproc->priority = curproc->startpriority;
-	release(&ptable.lock);
 }
 
 // Enter scheduler.  Must hold only ptable.lock

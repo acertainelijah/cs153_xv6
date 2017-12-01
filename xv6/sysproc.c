@@ -7,6 +7,28 @@
 #include "mmu.h"
 #include "proc.h"
 
+int sys_shm_open(void) {
+  int id;
+  char **pointer;
+
+  if(argint(0, &id) < 0)
+    return -1;
+
+  if(argptr(1, (char **) (&pointer),4)<0)
+    return -1;
+  return shm_open(id, pointer);
+}
+
+int sys_shm_close(void) {
+  int id;
+
+  if(argint(0, &id) < 0)
+    return -1;
+
+  
+  return shm_close(id);
+}
+
 int
 sys_fork(void)
 {
@@ -16,29 +38,14 @@ sys_fork(void)
 int
 sys_exit(void)
 {
-  //cs153 get status from user space and return status
-  int status;
-  argint(0, &status);
-  exit(status);
-  return 0;  
+  exit();
+  return 0;  // not reached
 }
 
 int
 sys_wait(void)
 {
-  //cs153 get status to implement wait
-  int* status;
-  argptr(0, (char **) &status, sizeof(int*));
-  return wait(status);
-}
-
-//cs153 new sys call for setting priority
-int                            
-sys_changepriority(void){      
-  int priority;
-  argint(0, &priority);
-  changepriority(priority);
-  return priority;
+  return wait();
 }
 
 int
@@ -103,17 +110,4 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
-}
-
-//cs153 implement waitpid sys call
-int
-sys_waitpid(){
-  int pid, options;
-  int *status;
-
-  argint(0, &pid);
-  argptr(1, (char**) &status, sizeof(int*));
-  argint(2, &options);
-  return waitpid(pid, status, options);
-  return 0;
 }

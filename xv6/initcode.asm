@@ -23,7 +23,7 @@ start:
 
 00000013 <exit>:
 
-# for(;;) exit(0);
+# for(;;) exit();
 exit:
   movl $SYS_exit, %eax
   13:	b8 02 00 00 00       	mov    $0x2,%eax
