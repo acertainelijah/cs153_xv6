@@ -10689,7 +10689,7 @@ sti(void)
     acquire(&ptable.lock);
 80103a81:	83 ec 0c             	sub    $0xc,%esp
     //cs153 find process with highest priority
-    int min = 64;//cs153 store min priority - 1
+    int highestPriority = 64;//cs153 store (lowest priority + 1) 
 80103a84:	bf 40 00 00 00       	mov    $0x40,%edi
   for(;;){
     // Enable interrupts on this processor.
@@ -10701,7 +10701,7 @@ sti(void)
 80103a8e:	e8 9d 0b 00 00       	call   80104630 <acquire>
 80103a93:	83 c4 10             	add    $0x10,%esp
     //cs153 find process with highest priority
-    int min = 64;//cs153 store min priority - 1
+    int highestPriority = 64;//cs153 store (lowest priority + 1) 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 80103a96:	b8 54 2d 11 80       	mov    $0x80112d54,%eax
 80103a9b:	eb 0f                	jmp    80103aac <scheduler+0x4c>
@@ -10709,12 +10709,11 @@ sti(void)
 80103aa0:	05 54 01 00 00       	add    $0x154,%eax
 80103aa5:	3d 54 82 11 80       	cmp    $0x80118254,%eax
 80103aaa:	74 1d                	je     80103ac9 <scheduler+0x69>
-		if (p->state != RUNNABLE) {
+		if (p->state != RUNNABLE) 
 80103aac:	83 78 0c 03          	cmpl   $0x3,0xc(%eax)
 80103ab0:	75 ee                	jne    80103aa0 <scheduler+0x40>
 			continue;
-		}
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
 80103ab2:	8b 88 4c 01 00 00    	mov    0x14c(%eax),%ecx
 80103ab8:	39 cf                	cmp    %ecx,%edi
 80103aba:	0f 4f f9             	cmovg  %ecx,%edi
@@ -10722,18 +10721,18 @@ sti(void)
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
     //cs153 find process with highest priority
-    int min = 64;//cs153 store min priority - 1
+    int highestPriority = 64;//cs153 store (lowest priority + 1) 
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
 80103abd:	05 54 01 00 00       	add    $0x154,%eax
 80103ac2:	3d 54 82 11 80       	cmp    $0x80118254,%eax
 80103ac7:	75 e3                	jne    80103aac <scheduler+0x4c>
 80103ac9:	bb 54 2d 11 80       	mov    $0x80112d54,%ebx
 80103ace:	eb 0e                	jmp    80103ade <scheduler+0x7e>
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
-			min = p->priority;
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
+			highestPriority = p->priority;
 		}
 	}
-    //cs153 @@
+    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 80103ad0:	81 c3 54 01 00 00    	add    $0x154,%ebx
 80103ad6:	81 fb 54 82 11 80    	cmp    $0x80118254,%ebx
@@ -10741,37 +10740,37 @@ sti(void)
       if(p->state != RUNNABLE)
 80103ade:	83 7b 0c 03          	cmpl   $0x3,0xc(%ebx)
 80103ae2:	75 ec                	jne    80103ad0 <scheduler+0x70>
+        continue;
 
      // Switch to chosen process.  It is the process's job
      // to release ptable.lock and then reacquire it
      // before jumping back to us.
-     //cs153 switch if current process has the highest priority
-     if (p->priority == min) {
+     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
 80103ae4:	3b bb 4c 01 00 00    	cmp    0x14c(%ebx),%edi
 80103aea:	75 e4                	jne    80103ad0 <scheduler+0x70>
 		  c->proc = p;
 		  switchuvm(p);//cs153 switch to higher priority process
 80103aec:	83 ec 0c             	sub    $0xc,%esp
+
      // Switch to chosen process.  It is the process's job
      // to release ptable.lock and then reacquire it
      // before jumping back to us.
-     //cs153 switch if current process has the highest priority
-     if (p->priority == min) {
+     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
 		  c->proc = p;
 80103aef:	89 9e ac 00 00 00    	mov    %ebx,0xac(%esi)
 		  switchuvm(p);//cs153 switch to higher priority process
 80103af5:	53                   	push   %ebx
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
-			min = p->priority;
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
+			highestPriority = p->priority;
 		}
 	}
-    //cs153 @@
+    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 80103af6:	81 c3 54 01 00 00    	add    $0x154,%ebx
+     // Switch to chosen process.  It is the process's job
      // to release ptable.lock and then reacquire it
      // before jumping back to us.
-     //cs153 switch if current process has the highest priority
-     if (p->priority == min) {
+     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
 		  c->proc = p;
 		  switchuvm(p);//cs153 switch to higher priority process
 80103afc:	e8 4f 31 00 00       	call   80106c50 <switchuvm>
@@ -10781,9 +10780,9 @@ sti(void)
 80103b02:	5a                   	pop    %edx
 80103b03:	ff b3 c8 fe ff ff    	pushl  -0x138(%ebx)
 80103b09:	ff 75 e4             	pushl  -0x1c(%ebp)
+     // to release ptable.lock and then reacquire it
      // before jumping back to us.
-     //cs153 switch if current process has the highest priority
-     if (p->priority == min) {
+     if (p->priority == highestPriority) { //cs153 run process if current process has the highest priority
 		  c->proc = p;
 		  switchuvm(p);//cs153 switch to higher priority process
 		  p->state = RUNNING;
@@ -10798,11 +10797,11 @@ sti(void)
 		  // It should have changed its p->state before coming back.
 		  c->proc = 0;
 80103b20:	83 c4 10             	add    $0x10,%esp
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
-			min = p->priority;
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
+			highestPriority = p->priority;
 		}
 	}
-    //cs153 @@
+    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 80103b23:	81 fb 54 82 11 80    	cmp    $0x80118254,%ebx
 		  swtch(&c->scheduler, p->context);
@@ -10813,11 +10812,11 @@ sti(void)
 		  c->proc = 0;
 80103b29:	c7 86 ac 00 00 00 00 	movl   $0x0,0xac(%esi)
 80103b30:	00 00 00 
-		else if (p->priority < min) {//cs153 check if finds a process with higher priority
-			min = p->priority;
+		else if (p->priority < highestPriority) {//cs153 check if finds a process with higher priority
+			highestPriority = p->priority;
 		}
 	}
-    //cs153 @@
+    //cs153 Loop over process table looking for the process with the highest priority to run
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 80103b33:	75 a9                	jne    80103ade <scheduler+0x7e>
 80103b35:	8d 76 00             	lea    0x0(%esi),%esi
@@ -11208,7 +11207,7 @@ wakeup1(void *chan)
   //cs153 wakes up waiting processes
   int x;  
   if(curproc->p_array_sz != 0){
-  	for(x = 0; x < curproc->p_array_sz; x++){
+    for(x = 0; x < curproc->p_array_sz; x++){
 80103d7a:	8b 83 48 01 00 00    	mov    0x148(%ebx),%eax
 80103d80:	31 c9                	xor    %ecx,%ecx
 80103d82:	85 c0                	test   %eax,%eax
@@ -11216,11 +11215,11 @@ wakeup1(void *chan)
 80103d86:	ba 54 2d 11 80       	mov    $0x80112d54,%edx
 80103d8b:	eb 11                	jmp    80103d9e <exit+0xde>
 80103d8d:	8d 76 00             	lea    0x0(%esi),%esi
-		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
 80103d90:	81 c2 54 01 00 00    	add    $0x154,%edx
 80103d96:	81 fa 54 82 11 80    	cmp    $0x80118254,%edx
 80103d9c:	74 3a                	je     80103dd8 <exit+0x118>
-			if(p->pid == curproc->p_array[x]){
+        if(p->pid == curproc->p_array[x]){
 80103d9e:	8b 84 8b 80 00 00 00 	mov    0x80(%ebx,%ecx,4),%eax
 80103da5:	39 42 10             	cmp    %eax,0x10(%edx)
 80103da8:	75 e6                	jne    80103d90 <exit+0xd0>
@@ -11249,7 +11248,7 @@ wakeup1(void *chan)
   //cs153 wakes up waiting processes
   int x;  
   if(curproc->p_array_sz != 0){
-  	for(x = 0; x < curproc->p_array_sz; x++){
+    for(x = 0; x < curproc->p_array_sz; x++){
 80103dd8:	83 c1 01             	add    $0x1,%ecx
 80103ddb:	39 8b 48 01 00 00    	cmp    %ecx,0x148(%ebx)
 80103de1:	7f a3                	jg     80103d86 <exit+0xc6>
@@ -11262,8 +11261,8 @@ wakeup1(void *chan)
 80103de3:	8b 0d b8 a5 10 80    	mov    0x8010a5b8,%ecx
 80103de9:	ba 54 2d 11 80       	mov    $0x80112d54,%edx
 80103dee:	eb 0e                	jmp    80103dfe <exit+0x13e>
-    		}
-  	}
+      }
+    }
   }
 
   // Pass abandoned children to init.
@@ -16636,19 +16635,19 @@ sys_waitpid(){
 801059e9:	50                   	push   %eax
 801059ea:	6a 00                	push   $0x0
 801059ec:	e8 bf f0 ff ff       	call   80104ab0 <argint>
-  argptr(0, (char**) &status, sizeof(int*));
+  argptr(1, (char**) &status, sizeof(int*));
 801059f1:	8d 45 f4             	lea    -0xc(%ebp),%eax
 801059f4:	83 c4 0c             	add    $0xc,%esp
 801059f7:	6a 04                	push   $0x4
 801059f9:	50                   	push   %eax
-801059fa:	6a 00                	push   $0x0
+801059fa:	6a 01                	push   $0x1
 801059fc:	e8 ff f0 ff ff       	call   80104b00 <argptr>
-  argint(0, &options);
+  argint(2, &options);
 80105a01:	58                   	pop    %eax
 80105a02:	8d 45 f0             	lea    -0x10(%ebp),%eax
 80105a05:	5a                   	pop    %edx
 80105a06:	50                   	push   %eax
-80105a07:	6a 00                	push   $0x0
+80105a07:	6a 02                	push   $0x2
 80105a09:	e8 a2 f0 ff ff       	call   80104ab0 <argint>
   return waitpid(pid, status, options);
 80105a0e:	83 c4 0c             	add    $0xc,%esp
