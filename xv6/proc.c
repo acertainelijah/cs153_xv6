@@ -259,13 +259,13 @@ exit(int status)//cs153 add int status parameter
   //cs153 wakes up waiting processes
   int x;  
   if(curproc->p_array_sz != 0){
-  	for(x = 0; x < curproc->p_array_sz; x++){
-		for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
-			if(p->pid == curproc->p_array[x]){
-				wakeup1(p);
-      			}
-    		}
-  	}
+    for(x = 0; x < curproc->p_array_sz; x++){
+      for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+	if(p->pid == curproc->p_array[x]){
+          wakeup1(p);
+      	}
+       }
+     }
   }
 
   // Pass abandoned children to init.

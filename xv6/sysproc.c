@@ -112,8 +112,8 @@ sys_waitpid(){
   int *status;
 
   argint(0, &pid);
-  argptr(0, (char**) &status, sizeof(int*));
-  argint(0, &options);
+  argptr(1, (char**) &status, sizeof(int*));
+  argint(2, &options);
   return waitpid(pid, status, options);
   return 0;
 }
